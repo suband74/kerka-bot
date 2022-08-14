@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/locality:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    # It takes time for PostgreSQL to run and thus be able to accept connections.
+    # So we need to make sure it's workable before we start the web app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+  
+  storage:
+    image: redis
+    volumes:
+      - ./redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  bot:
+    build: .
+    # I also run alembic migrations before running the app.
+    # That makes development deployment immediate
+    command: bash -c "alembic upgrade head && python src/kerka_bot/telebot.py"
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_SERVER=db
+    depends_on:
+      db:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
