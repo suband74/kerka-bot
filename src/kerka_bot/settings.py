@@ -8,7 +8,7 @@ USER = "postgres"
 PASSWORD = "postgres"
 DATABASE = "postgres"
 HOST = "db"
-BOT_TOKEN = '5558331667:AAGs_rIlcjFJQsemZuosAmmu9ConglBcXZQ'
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 POSTGRES_DATABASE_URL = f"postgresql://{USER}:{PASSWORD}@{HOST}/{DATABASE}"
 
